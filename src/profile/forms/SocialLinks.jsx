@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from '@edx/paragon';
 import { connect } from 'react-redux';
@@ -33,181 +33,188 @@ const platformDisplayInfo = {
   },
 };
 
-class SocialLinks extends React.Component {
-  constructor(props) {
-    super(props);
+const SocialLinks = ({
+  formId,
+  socialLinks,
+  draftSocialLinksByPlatform,
+  visibilitySocialLinks,
+  editMode: initialEditMode,
+  saveState,
+  error,
+  intl,
+  changeData,
+  changeHandler,
+  submitHandler,
+  closeHandler,
+  openHandler,
+  saveData,
+  onSaveComplete,
+}) => {
+  const [editMode, setEditMode] = useState(changeData ? 'editing' : initialEditMode);
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.handleOpen = this.handleOpen.bind(this);
-  }
+  useEffect(() => {
+    if (changeData) {
+      handleOpen();
+    } else {
+      handleClose();
+    }
+  }, [changeData]);
 
-  handleChange(e) {
+  useEffect(() => {
+    if (saveData) {
+      handleSubmit();
+    }
+  }, [saveData]);
+
+  const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // The social links are a bit special. If we're updating them, we need to merge them
-    // with any existing social link drafts, essentially sending a fresh copy of the whole
-    // data structure back to the reducer. This helps the reducer stay simple and keeps
-    // special cases out of it, concentrating them here, where they began.
     if (name !== 'visibilitySocialLinks') {
-      this.props.changeHandler(
+      changeHandler(
         'socialLinks',
-        this.mergeWithDrafts({
+        mergeWithDrafts({
           platform: name,
-          // If it's an empty string, send it as null.
-          // The empty string is just for the input.  We want nulls.
-          socialLink: value,
+          socialLink: value || null,
         }),
       );
     } else {
-      this.props.changeHandler(name, value);
+      changeHandler(name, value);
     }
-  }
+  };
 
-  handleSubmit(e) {
-    e.preventDefault();
-    this.props.submitHandler(this.props.formId);
-  }
+  const handleSubmit = (e) => {
+    // Проверяем, есть ли объект события и выполняем preventDefault, если он существует
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    submitHandler(formId);
+    if (onSaveComplete) {
+      onSaveComplete();
+    }
+  };
 
-  handleClose() {
-    this.props.closeHandler(this.props.formId);
-  }
+  const handleClose = () => {
+    closeHandler(formId);
+    setEditMode('static');
+  };
 
-  handleOpen() {
-    this.props.openHandler(this.props.formId);
-  }
+  const handleOpen = () => {
+    openHandler(formId);
+    setEditMode('editing');
+  };
 
-  mergeWithDrafts(newSocialLink) {
+  const mergeWithDrafts = (newSocialLink) => {
     const knownPlatforms = ['twitter', 'facebook', 'linkedin'];
     const updated = [];
     knownPlatforms.forEach((platform) => {
       if (newSocialLink.platform === platform) {
         updated.push(newSocialLink);
-      } else if (this.props.draftSocialLinksByPlatform[platform] !== undefined) {
-        updated.push(this.props.draftSocialLinksByPlatform[platform]);
+      } else if (draftSocialLinksByPlatform[platform] !== undefined) {
+        updated.push(draftSocialLinksByPlatform[platform]);
       }
     });
     return updated;
-  }
+  };
 
-  render() {
-    const {
-      socialLinks, visibilitySocialLinks, editMode, saveState, error, intl,
-    } = this.props;
-
-    return (
-      <SwitchContent
-        className="mb-5"
-        expression={editMode}
-        cases={{
-          empty: (
-            <>
-              <EditableItemHeader content={intl.formatMessage(messages['profile.sociallinks.social.links'])} />
-              <ul className="list-unstyled">
-                {socialLinks.map(({ platform }) => (
-                  <EmptyListItem
+  return (
+    <SwitchContent
+      className="mb-5"
+      expression={editMode}
+      cases={{
+        empty: (
+          <>
+            <EditableItemHeader content={intl.formatMessage(messages['profile.sociallinks.social.links'])} />
+            <ul className="list-unstyled">
+              {socialLinks.map(({ platform }) => (
+                <EmptyListItem
+                  key={platform}
+                  onClick={handleOpen}
+                  name={platformDisplayInfo[platform].name}
+                />
+              ))}
+            </ul>
+          </>
+        ),
+        static: (
+          <>
+            <ul className="list-unstyled">
+              {socialLinks
+                .filter(({ socialLink }) => Boolean(socialLink))
+                .map(({ platform, socialLink }) => (
+                  <StaticListItem
                     key={platform}
-                    onClick={this.handleOpen}
-                    name={platformDisplayInfo[platform].name}
-                  />
-                ))}
-              </ul>
-            </>
-          ),
-          static: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.sociallinks.social.links'])}
-              />
-              <ul className="list-unstyled">
-                {socialLinks
-                  .filter(({ socialLink }) => Boolean(socialLink))
-                  .map(({ platform, socialLink }) => (
-                    <StaticListItem
-                      key={platform}
-                      name={platformDisplayInfo[platform].name}
-                      url={socialLink}
-                      platform={platform}
-                    />
-                  ))}
-              </ul>
-            </>
-          ),
-          editable: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.sociallinks.social.links'])}
-                showEditButton
-                onClickEdit={this.handleOpen}
-                showVisibility={visibilitySocialLinks !== null}
-                visibility={visibilitySocialLinks}
-              />
-              <ul className="list-unstyled">
-                {socialLinks.map(({ platform, socialLink }) => (
-                  <EditableListItem
-                    key={platform}
-                    platform={platform}
                     name={platformDisplayInfo[platform].name}
                     url={socialLink}
-                    onClickEmptyContent={this.handleOpen}
+                    platform={platform}
+                  />
+                ))}
+            </ul>
+          </>
+        ),
+        editable: (
+          <>
+            <EditableItemHeader
+              content={intl.formatMessage(messages['profile.sociallinks.social.links'])}
+              showEditButton
+              onClickEdit={handleOpen}
+              showVisibility={visibilitySocialLinks !== null}
+              visibility={visibilitySocialLinks}
+            />
+            <ul className="list-unstyled">
+              {socialLinks.map(({ platform, socialLink }) => (
+                <EditableListItem
+                  key={platform}
+                  platform={platform}
+                  name={platformDisplayInfo[platform].name}
+                  url={socialLink}
+                  onClickEmptyContent={handleOpen}
+                />
+              ))}
+            </ul>
+          </>
+        ),
+        editing: (
+          <div role="dialog" aria-labelledby="social-links-label">
+            <form aria-labelledby="editing-form" onSubmit={handleSubmit}>
+              <div id="social-error-feedback">
+                {error !== null && (
+                  <Alert variant="danger" dismissible={false} show>
+                    {error}
+                  </Alert>
+                )}
+              </div>
+              <ul className="list-unstyled">
+                {socialLinks.map(({ platform, socialLink }) => (
+                  <EditingListItem
+                    key={platform}
+                    name={platformDisplayInfo[platform].name}
+                    platform={platform}
+                    value={socialLink}
+                    onChange={handleChange}
+                    error={error}
                   />
                 ))}
               </ul>
-            </>
-          ),
-          editing: (
-            <div role="dialog" aria-labelledby="social-links-label">
-              <form aria-labelledby="editing-form" onSubmit={this.handleSubmit}>
-                <EditableItemHeader
-                  headingId="social-links-label"
-                  content={intl.formatMessage(messages['profile.sociallinks.social.links'])}
-                />
-                {/* TODO: Replace this alert with per-field errors. Needs API update. */}
-                <div id="social-error-feedback">
-                  {error !== null
-                    ? (
-                      <Alert variant="danger" dismissible={false} show>
-                        {error}
-                      </Alert>
-                    ) : null}
-                </div>
-                <ul className="list-unstyled">
-                  {socialLinks.map(({ platform, socialLink }) => (
-                    <EditingListItem
-                      key={platform}
-                      name={platformDisplayInfo[platform].name}
-                      platform={platform}
-                      value={socialLink}
-                      /* TODO: Per-field errors: error={error !== null ? error[platform] : null} */
-                      onChange={this.handleChange}
-                    />
-                  ))}
-                </ul>
+              <div className='tw-hidden'>
                 <FormControls
                   visibilityId="visibilitySocialLinks"
                   saveState={saveState}
                   visibility={visibilitySocialLinks}
-                  cancelHandler={this.handleClose}
-                  changeHandler={this.handleChange}
+                  cancelHandler={handleClose}
+                  changeHandler={handleChange}
+                  saveData={saveData} // Передаем состояние saveData в FormControls
                 />
-              </form>
-            </div>
-          ),
-        }}
-      />
-    );
-  }
-}
+              </div>
+            </form>
+          </div>
+        ),
+      }}
+    />
+  );
+};
 
 SocialLinks.propTypes = {
-  // It'd be nice to just set this as a defaultProps...
-  // except the class that comes out on the other side of react-redux's
-  // connect() method won't have it anymore. Static properties won't survive
-  // through the higher order function.
   formId: PropTypes.string.isRequired,
-
-  // From Selector
   socialLinks: PropTypes.arrayOf(PropTypes.shape({
     platform: PropTypes.string,
     socialLink: PropTypes.string,
@@ -220,14 +227,11 @@ SocialLinks.propTypes = {
   editMode: PropTypes.oneOf(['editing', 'editable', 'empty', 'static']),
   saveState: PropTypes.string,
   error: PropTypes.string,
-
-  // Actions
   changeHandler: PropTypes.func.isRequired,
   submitHandler: PropTypes.func.isRequired,
   closeHandler: PropTypes.func.isRequired,
   openHandler: PropTypes.func.isRequired,
-
-  // i18n
+  changeData: PropTypes.bool,
   intl: intlShape.isRequired,
 };
 
@@ -237,6 +241,7 @@ SocialLinks.defaultProps = {
   draftSocialLinksByPlatform: {},
   visibilitySocialLinks: 'private',
   error: null,
+  changeData: false,
 };
 
 export default connect(
@@ -275,6 +280,7 @@ EditableListItem.propTypes = {
   name: PropTypes.string.isRequired,
   onClickEmptyContent: PropTypes.func,
 };
+
 EditableListItem.defaultProps = {
   url: null,
   onClickEmptyContent: null,
@@ -285,15 +291,20 @@ const EditingListItem = ({
 }) => (
   <li className="form-group">
     <label htmlFor={`social-${platform}`}>{name}</label>
-    <input
-      className={classNames('form-control', { 'is-invalid': Boolean(error) })}
-      type="text"
-      id={`social-${platform}`}
-      name={platform}
-      value={value || ''}
-      onChange={onChange}
-      aria-describedby="social-error-feedback"
-    />
+    <div className='tw-relative'>
+      <FontAwesomeIcon className="tw-absolute tw-left-[14px] tw-top-[50%] -tw-translate-y-1/2" icon={platformDisplayInfo[platform].icon} />
+      <input
+
+        className={classNames('input-text', { 'is-invalid': Boolean(error) })}
+        type="text"
+        id={`social-${platform}`}
+        name={platform}
+        value={value || ''}
+        onChange={onChange}
+        aria-describedby="social-error-feedback"
+      />
+    </div>
+
   </li>
 );
 

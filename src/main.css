@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.borderStyles {
+    background-color: white;
+    border: 2px solid;
+    border-radius: 20px;
+    border-color: grey;
+    padding: 15px;
+
+}
+
+.borderInput {
+    width: 263px;
+    border: 1px solid;
+    border-radius: 5px;
+    border-color: black;
+    padding: 10px;
+}
+
+p {
+    margin-bottom: none !important;
+}
+
+.select-input {
+    height: 47px;
+    width: 350px;
+    padding-left: 14px;
+    padding-right: 35px;
+    border: 1.5px solid #BBBBBD;
+    border-radius: 8px;
+    appearance: none;
+    text-overflow: clip;
+    background: url(./profile/assets/vector.svg) no-repeat right;
+    background-position-x: calc(100% - 14px);
+    background-color: white;
+}
+
+.input-large {
+    width: 350px;
+    min-height: 150px;
+    margin-top: 4px;
+    border: 1.5px solid #BBBBBD;
+    border-radius: 8px;
+    padding: 16px 16px 72px 16px;
+}
+
+.input-text {
+    height: 50px;
+    width: 270px;
+    padding: 16px;
+    padding-left: 46px;
+    border: 1.5px solid #BBBBBD;
+    border-radius: 8px;
+}
+
+.input-text:active {
+    border-color: #7A00AD;
+}
+
+.button-primary {
+    background-color: #F57A28;
+    border: 1px solid white;
+    padding: 12px 24px 12px 24px;
+    border-radius: 48px;
+    color: white;
+    font-size: 16px;
+}
+
+.button-outlined {
+    border: 1.5px solid #2C1005;
+    background-color: white;
+    padding: 12px 24px 12px 24px;
+    border-radius: 48px;
+    color: #2C1005;
+    font-size: 16px;
+}
+
+.button-lg {
+    width: 254px;
+}
+
+.btn-link {
+    color: black !important;
+    text-decoration: none !important;
+}

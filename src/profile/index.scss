@@ -1,16 +1,42 @@
+body {
+  background-color: #110f12;
+  font-family: "grotesk", sans-serif !important;
+  font-size: 16px important;
+  line-height: 1.5 important;
+}
+
+@font-face {
+  font-family: "grotesk";
+  src: url("../fonts/cy-grotesk-key-regular.ttf");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "grotesk";
+  src: url("../fonts/cy-grotesk-key-medium.ttf");
+  font-weight: 500;
+}
+
+
+
+
 .word-break-all {
   word-break: break-all !important;
 }
 
 // TODO: Update edx-bootstrap theme to incorporate these edits.
-.btn, a.btn {
+.btn,
+a.btn {
   text-decoration: none;
+
   &:hover {
     text-decoration: none;
   }
 }
+
 .btn-link {
   text-decoration: underline;
+
   &:hover {
     text-decoration: underline;
   }
@@ -68,7 +94,7 @@
   }
 
   .profile-avatar-menu-container {
-    background: rgba(0,0,0,.65);
+    background: rgba(0, 0, 0, .65);
     position: absolute;
     width: 100%;
     height: 100%;
@@ -78,12 +104,13 @@
     border-radius: 50%;
 
     @include media-breakpoint-up(md) {
-      background: linear-gradient(to top, rgba(0,0,0,.65) 4rem, rgba(0,0,0,0) 4rem);
+      background: linear-gradient(to top, rgba(0, 0, 0, .65) 4rem, rgba(0, 0, 0, 0) 4rem);
       align-items: flex-end;
     }
 
     .btn {
       text-decoration: none;
+
       @include media-breakpoint-up(md) {
         margin-bottom: 1.2rem;
       }
@@ -124,15 +151,18 @@
       justify-content: center;
       padding-top: .1rem;
       font-weight: 600;
-      background: rgba(0,0,0,.5);
-      border-radius:0;
+      background: rgba(0, 0, 0, .5);
+      border-radius: 0;
       transition: opacity 200ms ease;
 
       @include media-breakpoint-up(md) {
         height: 4rem;
       }
 
-      &:focus, &:hover, &:active, &.active {
+      &:focus,
+      &:hover,
+      &:active,
+      &.active {
         opacity: 1;
       }
     }

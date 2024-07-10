@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
@@ -15,135 +15,155 @@ import SwitchContent from './elements/SwitchContent';
 // Selectors
 import { editableFormSelector } from '../data/selectors';
 
-class Bio extends React.Component {
-  constructor(props) {
-    super(props);
+const Bio = ({
+  formId,
+  bio,
+  visibilityBio,
+  editMode,
+  saveState,
+  error,
+  intl,
+  changeData,
+  changeHandler,
+  submitHandler,
+  closeHandler,
+  openHandler,
+  saveData,
+  onSaveComplete,
+}) => {
+  const [editModeState, setEditModeState] = useState(changeData ? 'editing' : editMode);
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.handleOpen = this.handleOpen.bind(this);
-  }
+  useEffect(() => {
+    if (changeData) {
+      handleOpen();
+    } else {
+      handleClose();
+    }
+  }, [changeData]);
 
-  handleChange(e) {
+  useEffect(() => {
+    if (saveData) {
+      handleSubmit();
+    }
+  }, [saveData]);
+
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    this.props.changeHandler(name, value);
-  }
+    changeHandler(name, value);
+  };
 
-  handleSubmit(e) {
-    e.preventDefault();
-    this.props.submitHandler(this.props.formId);
-  }
+  const handleSubmit = (e) => {
+    // Проверяем, есть ли объект события и выполняем preventDefault, если он существует
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    submitHandler(formId);
+    if (onSaveComplete) {
+      onSaveComplete();
+    }
+  };
 
-  handleClose() {
-    this.props.closeHandler(this.props.formId);
-  }
+  const handleClose = () => {
+    closeHandler(formId);
+    setEditModeState('static');
+  };
 
-  handleOpen() {
-    this.props.openHandler(this.props.formId);
-  }
+  const handleOpen = () => {
+    openHandler(formId);
+    setEditModeState('editing');
+  };
 
-  render() {
-    const {
-      formId, bio, visibilityBio, editMode, saveState, error, intl,
-    } = this.props;
-
-    return (
-      <SwitchContent
-        className="mb-5"
-        expression={editMode}
-        cases={{
-          editing: (
-            <div role="dialog" aria-labelledby={`${formId}-label`}>
-              <form onSubmit={this.handleSubmit}>
-                <Form.Group
-                  controlId={formId}
-                  isInvalid={error !== null}
-                >
-                  <label className="edit-section-header" htmlFor={formId}>
-                    {intl.formatMessage(messages['profile.bio.about.me'])}
-                  </label>
-                  <textarea
-                    className="form-control"
-                    id={formId}
-                    name={formId}
-                    value={bio}
-                    onChange={this.handleChange}
-                  />
-                  {error !== null && (
-                    <Form.Control.Feedback hasIcon={false}>
-                      {error}
-                    </Form.Control.Feedback>
-                  )}
-                </Form.Group>
+  return (
+    <SwitchContent
+      className="mb-5"
+      expression={editModeState}
+      cases={{
+        editing: (
+          <div role="dialog" aria-labelledby={`${formId}-label`}>
+            <form onSubmit={handleSubmit}>
+              <Form.Group
+                controlId={formId}
+                isInvalid={error !== null}
+              >
+                <label className="tw-block tw-text-[16px] tw-text-neutral-600 font-medium leading-[21.12px]" htmlFor={formId}>
+                  {intl.formatMessage(messages['profile.bio.about.me'])}
+                </label>
+                <textarea
+                  className="input-large"
+                  id={formId}
+                  name={formId}
+                  value={bio}
+                  onChange={handleChange}
+                />
+                {error !== null && (
+                  <Form.Control.Feedback hasIcon={false}>
+                    {error}
+                  </Form.Control.Feedback>
+                )}
+              </Form.Group>
+              <div className='tw-hidden'>
                 <FormControls
                   visibilityId="visibilityBio"
                   saveState={saveState}
                   visibility={visibilityBio}
-                  cancelHandler={this.handleClose}
-                  changeHandler={this.handleChange}
+                  cancelHandler={handleClose}
+                  changeHandler={handleChange}
+                  saveData={saveData} // Передаем состояние saveData в FormControls
                 />
-              </form>
-            </div>
-          ),
-          editable: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.bio.about.me'])}
-                showEditButton
-                onClickEdit={this.handleOpen}
-                showVisibility={visibilityBio !== null}
-                visibility={visibilityBio}
+              </div>
+            </form>
+          </div>
+        ),
+        editable: (
+          <>
+            <EditableItemHeader
+              content={intl.formatMessage(messages['profile.bio.about.me'])}
+              showEditButton
+              onClickEdit={handleOpen}
+              showVisibility={visibilityBio !== null}
+              visibility={visibilityBio}
+            />
+            <p data-hj-suppress className="lead">{bio}</p>
+          </>
+        ),
+        empty: (
+          <>
+            <EditableItemHeader content={intl.formatMessage(messages['profile.bio.about.me'])} />
+            <EmptyContent onClick={handleOpen}>
+              <FormattedMessage
+                id="profile.bio.empty"
+                defaultMessage="Add a short bio"
+                description="instructions when the user hasn't written an About Me"
               />
-              <p data-hj-suppress className="lead">{bio}</p>
-            </>
-          ),
-          empty: (
-            <>
-              <EditableItemHeader content={intl.formatMessage(messages['profile.bio.about.me'])} />
-              <EmptyContent onClick={this.handleOpen}>
-                <FormattedMessage
-                  id="profile.bio.empty"
-                  defaultMessage="Add a short bio"
-                  description="instructions when the user hasn't written an About Me"
-                />
-              </EmptyContent>
-            </>
-          ),
-          static: (
-            <>
-              <EditableItemHeader content={intl.formatMessage(messages['profile.bio.about.me'])} />
-              <p data-hj-suppress className="lead">{bio}</p>
-            </>
-          ),
-        }}
-      />
-    );
-  }
-}
+            </EmptyContent>
+          </>
+        ),
+        static: (
+          <>
+            <EditableItemHeader content={intl.formatMessage(messages['profile.bio.about.me'])} />
+            <p data-hj-suppress className="lead tw-text-[16px] tw-text-neutral-1000 font-medium leading-[24px]">{bio}</p>
+          </>
+        ),
+      }}
+    />
+  );
+};
 
 Bio.propTypes = {
-  // It'd be nice to just set this as a defaultProps...
-  // except the class that comes out on the other side of react-redux's
-  // connect() method won't have it anymore. Static properties won't survive
-  // through the higher order function.
   formId: PropTypes.string.isRequired,
-
-  // From Selector
   bio: PropTypes.string,
   visibilityBio: PropTypes.oneOf(['private', 'all_users']),
   editMode: PropTypes.oneOf(['editing', 'editable', 'empty', 'static']),
   saveState: PropTypes.string,
   error: PropTypes.string,
-
-  // Actions
   changeHandler: PropTypes.func.isRequired,
   submitHandler: PropTypes.func.isRequired,
   closeHandler: PropTypes.func.isRequired,
   openHandler: PropTypes.func.isRequired,
-
-  // i18n
   intl: intlShape.isRequired,
+  changeData: PropTypes.bool,
+  saveData: PropTypes.bool,
+  onSaveComplete: PropTypes.func,
 };
 
 Bio.defaultProps = {
@@ -152,6 +172,9 @@ Bio.defaultProps = {
   bio: null,
   visibilityBio: 'private',
   error: null,
+  changeData: false,
+  saveData: false,
+  onSaveComplete: null,
 };
 
 export default connect(

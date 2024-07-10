@@ -43,7 +43,7 @@ class ProfileAvatar extends React.Component {
   renderPending() {
     return (
       <div
-        className="position-absolute w-100 h-100 d-flex justify-content-center align-items-center rounded-circle"
+        className=" w-100 h-100 d-flex justify-content-center align-items-center rounded-circle"
         style={{ backgroundColor: 'rgba(0,0,0,.65)' }}
       >
         <div className="spinner-border text-primary" role="status" />
@@ -126,9 +126,9 @@ class ProfileAvatar extends React.Component {
 
   render() {
     return (
-      <div className="profile-avatar-wrap position-relative">
+      <div className="position-relative">
         <div className="profile-avatar rounded-circle bg-light">
-          {this.props.savePhotoState === 'pending' ? this.renderPending() : this.renderMenu() }
+          {this.props.savePhotoState === 'pending' ? this.renderPending() : this.renderMenu()}
           {this.renderAvatar()}
         </div>
         <form

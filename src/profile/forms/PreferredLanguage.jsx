@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { injectIntl, intlShape } from '@edx/frontend-platform/i18n';
@@ -15,152 +15,162 @@ import SwitchContent from './elements/SwitchContent';
 // Selectors
 import { preferredLanguageSelector } from '../data/selectors';
 
-class PreferredLanguage extends React.Component {
-  constructor(props) {
-    super(props);
+const PreferredLanguage = ({
+  formId,
+  languageProficiencies,
+  visibilityLanguageProficiencies,
+  editMode,
+  saveState,
+  error,
+  intl,
+  sortedLanguages,
+  languageMessages,
+  changeHandler,
+  submitHandler,
+  closeHandler,
+  openHandler,
+  changeData,
+  saveData,
+  onSaveComplete,
+}) => {
+  const [currentEditMode, setCurrentEditMode] = useState(changeData ? 'editing' : 'static');
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.handleOpen = this.handleOpen.bind(this);
-  }
+  useEffect(() => {
+    if (changeData) {
+      setCurrentEditMode('editing');
+    } else {
+      handleClose();
+    }
+  }, [changeData]);
 
-  handleChange(e) {
+  useEffect(() => {
+    if (saveData) {
+      handleSubmit();
+    }
+  }, [saveData]);
+
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    // Restructure the data.
-    // We deconstruct our value prop in render() so this
-    // changes our data's shape back to match what came in
-    if (name === this.props.formId) {
+    if (name === formId) {
       if (value !== '') {
-        this.props.changeHandler(name, [{ code: value }]);
+        changeHandler(name, [{ code: value }]);
       } else {
-        this.props.changeHandler(name, []);
+        changeHandler(name, []);
       }
     } else {
-      this.props.changeHandler(name, value);
+      changeHandler(name, value);
     }
-  }
+  };
 
-  handleSubmit(e) {
-    e.preventDefault();
-    this.props.submitHandler(this.props.formId);
-  }
+  const handleSubmit = (e) => {
+    // Проверяем, есть ли объект события и выполняем preventDefault, если он существует
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    submitHandler(formId);
+    if (onSaveComplete) {
+      onSaveComplete();
+    }
+  };
 
-  handleClose() {
-    this.props.closeHandler(this.props.formId);
-  }
+  const handleClose = () => {
+    closeHandler(formId);
+    setCurrentEditMode('static');
+  };
 
-  handleOpen() {
-    this.props.openHandler(this.props.formId);
-  }
+  const handleOpen = () => {
+    openHandler(formId);
+    setCurrentEditMode('editing');
+  };
 
-  render() {
-    const {
-      formId,
-      languageProficiencies,
-      visibilityLanguageProficiencies,
-      editMode,
-      saveState,
-      error,
-      intl,
-      sortedLanguages,
-      languageMessages,
-    } = this.props;
+  const value = languageProficiencies.length ? languageProficiencies[0].code : '';
 
-    const value = languageProficiencies.length ? languageProficiencies[0].code : '';
-
-    return (
-      <SwitchContent
-        className="mb-5"
-        expression={editMode}
-        cases={{
-          editing: (
-            <div role="dialog" aria-labelledby={`${formId}-label`}>
-              <form onSubmit={this.handleSubmit}>
-                <Form.Group
-                  controlId={formId}
-                  isInvalid={error !== null}
+  return (
+    <SwitchContent
+      className="mb-5"
+      expression={currentEditMode}
+      cases={{
+        editing: (
+          <div role="dialog" aria-labelledby={`${formId}-label`}>
+            <form onSubmit={handleSubmit}>
+              <Form.Group
+                controlId={formId}
+                isInvalid={error !== null}
+              >
+                <label className="tw-block tw-text-[16px] tw-text-neutral-600 font-medium leading-[21.12px]" htmlFor={formId}>
+                  {intl.formatMessage(messages['profile.preferredlanguage.label'])}
+                </label>
+                <select
+                  data-hj-suppress
+                  id={formId}
+                  name={formId}
+                  className="select-input"
+                  value={value}
+                  onChange={handleChange}
                 >
-                  <label className="edit-section-header" htmlFor={formId}>
-                    {intl.formatMessage(messages['profile.preferredlanguage.label'])}
-                  </label>
-                  <select
-                    data-hj-suppress
-                    id={formId}
-                    name={formId}
-                    className="form-control"
-                    value={value}
-                    onChange={this.handleChange}
-                  >
-                    <option value="">&nbsp;</option>
-                    {sortedLanguages.map(({ code, name }) => (
-                      <option key={code} value={code}>{name}</option>
-                    ))}
-                  </select>
-                  {error !== null && (
-                    <Form.Control.Feedback hasIcon={false}>
-                      {error}
-                    </Form.Control.Feedback>
-                  )}
-                </Form.Group>
+                  <option value="">&nbsp;</option>
+                  {sortedLanguages.map(({ code, name }) => (
+                    <option key={code} value={code}>{name}</option>
+                  ))}
+                </select>
+                {error !== null && (
+                  <Form.Control.Feedback hasIcon={false}>
+                    {error}
+                  </Form.Control.Feedback>
+                )}
+              </Form.Group>
+              <div className='tw-hidden'>
                 <FormControls
                   visibilityId="visibilityLanguageProficiencies"
                   saveState={saveState}
                   visibility={visibilityLanguageProficiencies}
-                  cancelHandler={this.handleClose}
-                  changeHandler={this.handleChange}
+                  cancelHandler={handleClose}
+                  changeHandler={handleChange}
+                  saveData={saveData} // Передаем состояние saveData в FormControls
                 />
-              </form>
-            </div>
-          ),
-          editable: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.preferredlanguage.label'])}
-                showEditButton
-                onClickEdit={this.handleOpen}
-                showVisibility={visibilityLanguageProficiencies !== null}
-                visibility={visibilityLanguageProficiencies}
-              />
-              <p data-hj-suppress className="h5">{languageMessages[value]}</p>
-            </>
-          ),
-          empty: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.preferredlanguage.label'])}
-              />
-              <EmptyContent onClick={this.handleOpen}>
-                {intl.formatMessage(messages['profile.preferredlanguage.empty'])}
-              </EmptyContent>
-            </>
-          ),
-          static: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.preferredlanguage.label'])}
-              />
-              <p data-hj-suppress className="h5">{languageMessages[value]}</p>
-            </>
-          ),
-        }}
-      />
-    );
-  }
-}
+              </div>
+            </form>
+          </div>
+        ),
+        editable: (
+          <>
+            <EditableItemHeader
+              content={intl.formatMessage(messages['profile.preferredlanguage.label'])}
+              showEditButton
+              onClickEdit={handleOpen}
+              showVisibility={visibilityLanguageProficiencies !== null}
+              visibility={visibilityLanguageProficiencies}
+            />
+            <p data-hj-suppress className="h5">{languageMessages[value]}</p>
+          </>
+        ),
+        empty: (
+          <>
+            <EditableItemHeader
+              content={intl.formatMessage(messages['profile.preferredlanguage.label'])}
+            />
+            <EmptyContent onClick={handleOpen}>
+              {intl.formatMessage(messages['profile.preferredlanguage.empty'])}
+            </EmptyContent>
+          </>
+        ),
+        static: (
+          <>
+            <EditableItemHeader
+              content={intl.formatMessage(messages['profile.preferredlanguage.label'])}
+            />
+            <p data-hj-suppress className="tw-text-[16px] tw-text-neutral-1000 font-medium leading-[24px]">{languageMessages[value]}</p>
+          </>
+        ),
+      }}
+    />
+  );
+};
 
 PreferredLanguage.propTypes = {
-  // It'd be nice to just set this as a defaultProps...
-  // except the class that comes out on the other side of react-redux's
-  // connect() method won't have it anymore. Static properties won't survive
-  // through the higher order function.
   formId: PropTypes.string.isRequired,
-
-  // From Selector
   languageProficiencies: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.shape({ code: PropTypes.string })),
-    // TODO: ProfilePageSelector should supply null values
-    // instead of empty strings when no value exists
     PropTypes.oneOf(['']),
   ]),
   visibilityLanguageProficiencies: PropTypes.oneOf(['private', 'all_users']),
@@ -172,15 +182,14 @@ PreferredLanguage.propTypes = {
     name: PropTypes.string.isRequired,
   })).isRequired,
   languageMessages: PropTypes.objectOf(PropTypes.string).isRequired,
-
-  // Actions
   changeHandler: PropTypes.func.isRequired,
   submitHandler: PropTypes.func.isRequired,
   closeHandler: PropTypes.func.isRequired,
   openHandler: PropTypes.func.isRequired,
-
-  // i18n
   intl: intlShape.isRequired,
+  changeData: PropTypes.bool,
+  saveData: PropTypes.bool,
+  onSaveComplete: PropTypes.func,
 };
 
 PreferredLanguage.defaultProps = {
@@ -189,6 +198,9 @@ PreferredLanguage.defaultProps = {
   languageProficiencies: [],
   visibilityLanguageProficiencies: 'private',
   error: null,
+  changeData: false,
+  saveData: false,
+  onSaveComplete: null,
 };
 
 export default connect(

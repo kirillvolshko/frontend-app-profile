@@ -26,13 +26,14 @@ import './index.scss';
 import Head from './head/Head';
 
 import AppRoutes from './routes/AppRoutes';
-
+import './main.css'
+import './output.css'
 subscribe(APP_READY, () => {
   ReactDOM.render(
     <AppProvider store={configureStore()}>
       <Head />
       <Header />
-      <main id="main">
+      <main id="main" className='tw-bg-body tw-rounded-b-[40px]'>
         <AppRoutes />
       </main>
       <Footer />

@@ -26,6 +26,32 @@ export async function getAccount(username) {
   // Process response data
   return processAccountData(data);
 }
+export async function getAccountData(username) {
+  const { data } = await getHttpClient().get(`${getConfig().LMS_BASE_URL}/api/user/v1/accounts/${username}`);
+
+  // Process response data
+  return processAccountData(data);
+}
+// UPDATE ACCOUNT
+export async function updateAccount(username, fieldToUpdate, newValue) {
+  const data = {};
+  data[fieldToUpdate] = newValue;
+  try {
+    const response = await getHttpClient().patch(
+      `${getConfig().LMS_BASE_URL}/api/user/v1/accounts/${username}`,
+      snakeCaseObject(data),
+      {
+        headers: {
+          'Content-Type': 'application/merge-patch+json',
+        },
+      }
+    );
+
+    return processAccountData(response.data);
+  } catch (error) {
+    processAndThrowError(error, processAccountData);
+  }
+}
 
 // PATCH PROFILE
 export async function patchProfile(username, params) {

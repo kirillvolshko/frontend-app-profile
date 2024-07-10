@@ -12,10 +12,9 @@ const EditableItemHeader = ({
   onClickEdit,
   headingId,
 }) => (
-  <div className="editable-item-header mb-2">
-    <h2 className="edit-section-header" id={headingId}>
+  <div className="editable-item-header tw-mb-[8px]">
+    <h2 className="tw-text-[16px] tw-text-neutral-600 font-medium leading-[21.12px]" id={headingId}>
       {content}
-      {showEditButton ? <EditButton style={{ marginTop: '-.35rem' }} className="float-right px-0" onClick={onClickEdit} /> : null}
     </h2>
     {showVisibility ? <p className="mb-0"><Visibility to={visibility} /></p> : null}
   </div>
@@ -33,7 +32,7 @@ EditableItemHeader.propTypes = {
 };
 
 EditableItemHeader.defaultProps = {
-  onClickEdit: () => {},
+  onClickEdit: () => { },
   showVisibility: false,
   showEditButton: false,
   content: '',
